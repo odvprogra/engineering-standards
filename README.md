@@ -32,10 +32,11 @@ these standards as code.
 
 ## Reusable workflows
 
-| Workflow                                           | What it does                                                                                                                                                                         |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [`python-ci.yml`](.github/workflows/python-ci.yml) | `uv sync --locked` → ruff format and lint → mypy → pytest with a total coverage gate (80%) and a domain coverage gate (95%) → coverage summary, artifact and optional Codecov upload |
-| [`security.yml`](.github/workflows/security.yml)   | pip-audit on the locked Python dependencies + gitleaks on the full git history (binary checksum-verified); honors a repo's `.gitleaks.toml`                                          |
+| Workflow                                                 | What it does                                                                                                                                                                         |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`python-ci.yml`](.github/workflows/python-ci.yml)       | `uv sync --locked` → ruff format and lint → mypy → pytest with a total coverage gate (80%) and a domain coverage gate (95%) → coverage summary, artifact and optional Codecov upload |
+| [`security.yml`](.github/workflows/security.yml)         | pip-audit on the locked Python dependencies + gitleaks on the full git history (binary checksum-verified); honors a repo's `.gitleaks.toml`                                          |
+| [`docker-build.yml`](.github/workflows/docker-build.yml) | Builds the image (with layer cache), fails if it runs as root, starts it (alone, or with its dependencies through `docker compose up --wait`) and polls `/health/ready`              |
 
 A project calls them from its own `.github/workflows/ci.yml`:
 
@@ -61,6 +62,13 @@ jobs:
     uses: odvprogra/engineering-standards/.github/workflows/security.yml@v1
     with:
       working-directory: api
+
+  docker:
+    uses: odvprogra/engineering-standards/.github/workflows/docker-build.yml@v1
+    with:
+      context: api
+      dockerfile: api/Dockerfile
+      compose-file: docker-compose.yml # optional: readiness needs PostgreSQL
 ```
 
 `python-ci.yml` inputs:

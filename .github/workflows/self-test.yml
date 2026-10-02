@@ -25,3 +25,16 @@ jobs:
     uses: ./.github/workflows/security.yml
     with:
       working-directory: tests/fixtures/sample-service
+
+  docker-build:
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      context: tests/fixtures/sample-web
+      dockerfile: tests/fixtures/sample-web/Dockerfile
+
+  docker-build-compose:
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      context: tests/fixtures/sample-web
+      dockerfile: tests/fixtures/sample-web/Dockerfile
+      compose-file: tests/fixtures/sample-web/compose.yaml
