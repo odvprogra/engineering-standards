@@ -22,10 +22,11 @@ these standards as code.
 
 ## Contents
 
-| Path                           | What it is                                                                                      |
-| ------------------------------ | ----------------------------------------------------------------------------------------------- |
-| [HANDBOOK.md](HANDBOOK.md)     | The standards: tooling, layout, architecture, testing, API conventions, delivery, docs, UI & UX |
-| [docs/adr](docs/adr/README.md) | Decisions shared by every repo, with context and alternatives                                   |
+| Path                           | What it is                                                                                             |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| [HANDBOOK.md](HANDBOOK.md)     | The standards: tooling, layout, architecture, testing, API conventions, delivery, docs, UI & UX        |
+| [docs/adr](docs/adr/README.md) | Decisions shared by every repo, with context and alternatives                                          |
+| [.github](.github)             | Canonical pull request and issue templates. The service template copies them into every generated repo |
 
 ## License
 

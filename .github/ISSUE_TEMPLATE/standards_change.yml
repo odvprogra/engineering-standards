@@ -1,0 +1,43 @@
+name: Standards change
+description: Propose adding, changing or removing a rule in the handbook.
+labels: [enhancement]
+body:
+  - type: input
+    id: section
+    attributes:
+      label: Handbook section
+      placeholder: "§7 Testing strategy"
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Current rule
+      description: What the handbook says today (or "none" for a new rule).
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: The problem the current rule causes, with evidence if possible.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact on existing repos
+      description:
+        What existing repos must change, and whether the service template must change too.
+  - type: checkboxes
+    id: adr
+    attributes:
+      label: Decision record
+      options:
+        - label: This change is a decision with trade-offs and needs an ADR
