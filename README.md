@@ -35,6 +35,7 @@ these standards as code.
 | Workflow                                           | What it does                                                                                                                                                                         |
 | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [`python-ci.yml`](.github/workflows/python-ci.yml) | `uv sync --locked` → ruff format and lint → mypy → pytest with a total coverage gate (80%) and a domain coverage gate (95%) → coverage summary, artifact and optional Codecov upload |
+| [`security.yml`](.github/workflows/security.yml)   | pip-audit on the locked Python dependencies + gitleaks on the full git history (binary checksum-verified); honors a repo's `.gitleaks.toml`                                          |
 
 A project calls them from its own `.github/workflows/ci.yml`:
 
@@ -55,6 +56,11 @@ jobs:
     with:
       working-directory: api # where pyproject.toml lives; defaults to "."
     secrets: inherit # passes CODECOV_TOKEN if the repo defines it
+
+  security:
+    uses: odvprogra/engineering-standards/.github/workflows/security.yml@v1
+    with:
+      working-directory: api
 ```
 
 `python-ci.yml` inputs:
