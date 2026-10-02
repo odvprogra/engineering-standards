@@ -22,9 +22,10 @@ these standards as code.
 
 ## Contents
 
-| Path                       | What it is                                                                                      |
-| -------------------------- | ----------------------------------------------------------------------------------------------- |
-| [HANDBOOK.md](HANDBOOK.md) | The standards: tooling, layout, architecture, testing, API conventions, delivery, docs, UI & UX |
+| Path                           | What it is                                                                                      |
+| ------------------------------ | ----------------------------------------------------------------------------------------------- |
+| [HANDBOOK.md](HANDBOOK.md)     | The standards: tooling, layout, architecture, testing, API conventions, delivery, docs, UI & UX |
+| [docs/adr](docs/adr/README.md) | Decisions shared by every repo, with context and alternatives                                   |
 
 ## License
 

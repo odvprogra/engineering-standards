@@ -35,21 +35,21 @@ documented, delivered and presented, so that any repo can be read, run and chang
 
 ## 1. Tooling (Python)
 
-| Concern           | Choice                                                                                 |
-| ----------------- | -------------------------------------------------------------------------------------- |
-| Python            | 3.14, pinned in `.python-version`                                                      |
-| Database          | PostgreSQL 18                                                                          |
-| Packaging / env   | `uv`, lockfile committed                                                               |
-| Lint + format     | `ruff` (lint + format), line length 100                                                |
-| Type checking     | `mypy --strict` with the Pydantic plugin                                               |
-| Tests             | `pytest`, `pytest-cov`, `pytest-asyncio`, `hypothesis` where invariants matter         |
-| Integration tests | `testcontainers` with real PostgreSQL / Redis. Never SQLite as a stand-in for Postgres |
-| Settings          | `pydantic-settings`, 12-factor, all configuration from the environment                 |
-| Logging           | Structured JSON logs (`structlog`), `request_id` / `trace_id` on every line            |
-| Observability     | OpenTelemetry traces and metrics wherever the service has HTTP traffic                 |
-| Security scans    | `pip-audit`, `gitleaks`                                                                |
-| Pre-commit        | ruff, mypy, gitleaks, end-of-file and whitespace fixers, commit message lint           |
-| Task runner       | `just`                                                                                 |
+| Concern           | Choice                                                                                                          |
+| ----------------- | --------------------------------------------------------------------------------------------------------------- |
+| Python            | 3.14, pinned in `.python-version` ([ADR-0002](docs/adr/0002-runtime-baseline-python-3-14-and-postgresql-18.md)) |
+| Database          | PostgreSQL 18 ([ADR-0002](docs/adr/0002-runtime-baseline-python-3-14-and-postgresql-18.md))                     |
+| Packaging / env   | `uv`, lockfile committed                                                                                        |
+| Lint + format     | `ruff` (lint + format), line length 100                                                                         |
+| Type checking     | `mypy --strict` with the Pydantic plugin ([ADR-0003](docs/adr/0003-type-checking-with-mypy-strict.md))          |
+| Tests             | `pytest`, `pytest-cov`, `pytest-asyncio`, `hypothesis` where invariants matter                                  |
+| Integration tests | `testcontainers` with real PostgreSQL / Redis. Never SQLite as a stand-in for Postgres                          |
+| Settings          | `pydantic-settings`, 12-factor, all configuration from the environment                                          |
+| Logging           | Structured JSON logs (`structlog`), `request_id` / `trace_id` on every line                                     |
+| Observability     | OpenTelemetry traces and metrics wherever the service has HTTP traffic                                          |
+| Security scans    | `pip-audit`, `gitleaks`                                                                                         |
+| Pre-commit        | ruff, mypy, gitleaks, end-of-file and whitespace fixers, commit message lint                                    |
+| Task runner       | `just`                                                                                                          |
 
 ## 2. Tooling (TypeScript / web)
 
@@ -113,9 +113,10 @@ just seed       # load demo data (where applicable)
 
 ## 5. Architecture principles
 
-- **Hexagonal-lite / clean architecture.** Dependencies point inward: `api` and `infrastructure`
-  depend on `application`, which depends on `domain`. The domain never imports FastAPI, SQLAlchemy,
-  httpx or an LLM SDK.
+- **Hexagonal-lite / clean architecture**
+  ([ADR-0001](docs/adr/0001-record-architecture-decisions.md)). Dependencies point inward: `api` and
+  `infrastructure` depend on `application`, which depends on `domain`. The domain never imports
+  FastAPI, SQLAlchemy, httpx or an LLM SDK.
 - **Ports are `typing.Protocol`s**, adapters live in `infrastructure`, and wiring happens only in
   the composition root.
 - **Rich domain only where there are business rules** (pricing, document lifecycles, approvals).
@@ -235,12 +236,12 @@ the ones available today.
 
 ### Architecture Decision Records
 
-Each ADR lives in `docs/adr/NNNN-title.md` with these sections: **Status**, **Context**,
-**Decision**, **Alternatives considered** and **Consequences** (positive and negative). One page at
-most.
+Each ADR lives in `docs/adr/NNNN-title.md`, starts from [the template](docs/adr/template.md) and has
+these sections: **Status**, **Context**, **Decision**, **Alternatives considered** and
+**Consequences** (positive and negative). One page at most.
 
 ADR-0001 in every repo is "Record architecture decisions", together with the architecture style
-chosen.
+chosen. Decisions shared by every repo are indexed in [docs/adr](docs/adr/README.md).
 
 ## 12. Definition of Done
 
