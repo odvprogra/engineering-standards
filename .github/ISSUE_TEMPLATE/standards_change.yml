@@ -33,8 +33,7 @@ body:
     id: impact
     attributes:
       label: Impact on existing repos
-      description:
-        What existing repos must change, and whether the service template must change too.
+      description: What existing repos must change, and whether the service template must change too.
   - type: checkboxes
     id: adr
     attributes:

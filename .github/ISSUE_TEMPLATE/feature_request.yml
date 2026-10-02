@@ -6,8 +6,7 @@ body:
     id: problem
     attributes:
       label: Problem
-      description:
-        Who has the problem, and what does it cost them today? Describe it before any solution.
+      description: Who has the problem, and what does it cost them today? Describe it before any solution.
     validations:
       required: true
   - type: textarea

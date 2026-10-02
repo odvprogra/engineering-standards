@@ -1,0 +1,5 @@
+{
+  "extends": "../.markdownlint.jsonc",
+  // Pull request and issue bodies render under a page that already has a title.
+  "MD041": false,
+}

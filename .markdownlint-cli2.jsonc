@@ -1,0 +1,5 @@
+// Which files markdownlint-cli2 checks. Rules live in .markdownlint.jsonc (one per directory level).
+{
+  "globs": ["**/*.md"],
+  "ignores": ["**/node_modules/**", "**/.venv/**"],
+}

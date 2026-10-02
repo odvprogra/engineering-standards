@@ -3,6 +3,8 @@
 > One engineering handbook, one set of decision records and one set of reusable CI workflows, shared
 > by every repository I build.
 
+[![Self-test](https://github.com/odvprogra/engineering-standards/actions/workflows/self-test.yml/badge.svg)](https://github.com/odvprogra/engineering-standards/actions/workflows/self-test.yml)
+[![Lint](https://github.com/odvprogra/engineering-standards/actions/workflows/lint.yml/badge.svg)](https://github.com/odvprogra/engineering-standards/actions/workflows/lint.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## Why this repo exists
@@ -82,6 +84,19 @@ jobs:
 
 Callers pin a release tag (`@v1`), never `@main`. Third-party actions inside the workflows are
 pinned to full commit SHAs, with the version in a comment.
+
+## Working on this repo
+
+Requires Docker, Node.js (for `npx`) and [uv](https://docs.astral.sh/uv/).
+
+```sh
+just setup   # install the sample project used by the self-tests
+just check   # lint (actionlint, Prettier, markdownlint) + the python-ci steps on the sample
+just fmt     # format everything with Prettier
+```
+
+CI runs the same `just lint` recipe, so tool versions are pinned in one place: the
+[justfile](justfile).
 
 ## License
 
