@@ -20,6 +20,8 @@ jobs:
     uses: ./.github/workflows/python-ci.yml
     with:
       working-directory: tests/fixtures/sample-service
+    # Exercises the Codecov upload path end to end (the fixture's coverage is not a project metric).
+    secrets: inherit
 
   security:
     uses: ./.github/workflows/security.yml
