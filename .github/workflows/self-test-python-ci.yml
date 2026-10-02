@@ -1,0 +1,22 @@
+name: Self-test python-ci
+
+# Runs the reusable workflow against a minimal sample project, so a change that breaks it fails here
+# before it reaches the repositories that call it.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python-ci:
+    uses: ./.github/workflows/python-ci.yml
+    with:
+      working-directory: tests/fixtures/sample-service

@@ -1,0 +1,99 @@
+name: Python CI
+
+# Reusable workflow: lint, type-check and test a uv-managed Python project (HANDBOOK §1, §7, §10).
+# The caller's pyproject.toml configures the tools: [tool.ruff], [tool.mypy] files, [tool.pytest]
+# and [tool.coverage]. Python comes from the caller's .python-version through uv.
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: Directory that contains pyproject.toml (for example "api" in a monorepo).
+        type: string
+        default: "."
+      coverage-min:
+        description: Minimum total coverage, in percent.
+        type: number
+        default: 80
+      domain-coverage-min:
+        description: Minimum coverage for domain code, in percent. 0 disables the gate.
+        type: number
+        default: 95
+      domain-coverage-pattern:
+        description: coverage.py --include pattern that selects domain code.
+        type: string
+        default: "*/domain/*"
+    secrets:
+      CODECOV_TOKEN:
+        description: Optional. When set, the coverage report is uploaded to Codecov.
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  python-ci:
+    name: Lint, type-check, test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    env:
+      # Exposed as env because the secrets context is not available in step conditions.
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: ${{ inputs.working-directory }}/uv.lock
+
+      - name: Install dependencies (lockfile must be up to date)
+        run: uv sync --locked --all-extras
+
+      - name: Format check
+        run: uv run ruff format --check .
+
+      - name: Lint
+        run: uv run ruff check --output-format=github .
+
+      - name: Type check
+        run: uv run mypy
+
+      # Inputs reach the shell as environment variables, never as ${{ }} inside run: (prevents
+      # script injection).
+      - name: Test with total coverage gate
+        env:
+          COVERAGE_MIN: ${{ inputs.coverage-min }}
+        run: >-
+          uv run pytest --cov --cov-report=xml --cov-report=term-missing
+          --cov-fail-under="$COVERAGE_MIN"
+
+      - name: Domain coverage gate
+        if: inputs.domain-coverage-min > 0
+        env:
+          DOMAIN_PATTERN: ${{ inputs.domain-coverage-pattern }}
+          DOMAIN_COVERAGE_MIN: ${{ inputs.domain-coverage-min }}
+        run: uv run coverage report --include="$DOMAIN_PATTERN" --fail-under="$DOMAIN_COVERAGE_MIN"
+
+      - name: Coverage summary
+        if: always()
+        run: uv run coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY" || true
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: coverage-xml
+          path: ${{ inputs.working-directory }}/coverage.xml
+          if-no-files-found: ignore
+
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        if: env.CODECOV_TOKEN != ''
+        with:
+          token: ${{ env.CODECOV_TOKEN }}
+          files: ${{ inputs.working-directory }}/coverage.xml
+          fail_ci_if_error: true

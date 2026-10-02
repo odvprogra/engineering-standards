@@ -22,11 +22,52 @@ these standards as code.
 
 ## Contents
 
-| Path                           | What it is                                                                                             |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| [HANDBOOK.md](HANDBOOK.md)     | The standards: tooling, layout, architecture, testing, API conventions, delivery, docs, UI & UX        |
-| [docs/adr](docs/adr/README.md) | Decisions shared by every repo, with context and alternatives                                          |
-| [.github](.github)             | Canonical pull request and issue templates. The service template copies them into every generated repo |
+| Path                                   | What it is                                                                                             |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| [HANDBOOK.md](HANDBOOK.md)             | The standards: tooling, layout, architecture, testing, API conventions, delivery, docs, UI & UX        |
+| [docs/adr](docs/adr/README.md)         | Decisions shared by every repo, with context and alternatives                                          |
+| [.github](.github)                     | Canonical pull request and issue templates. The service template copies them into every generated repo |
+| [.github/workflows](.github/workflows) | Reusable CI workflows (below) and the self-tests that exercise them                                    |
+| [tests/fixtures](tests/fixtures)       | Minimal sample projects the self-tests run the workflows against                                       |
+
+## Reusable workflows
+
+| Workflow                                           | What it does                                                                                                                                                                         |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`python-ci.yml`](.github/workflows/python-ci.yml) | `uv sync --locked` → ruff format and lint → mypy → pytest with a total coverage gate (80%) and a domain coverage gate (95%) → coverage summary, artifact and optional Codecov upload |
+
+A project calls them from its own `.github/workflows/ci.yml`:
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    uses: odvprogra/engineering-standards/.github/workflows/python-ci.yml@v1
+    with:
+      working-directory: api # where pyproject.toml lives; defaults to "."
+    secrets: inherit # passes CODECOV_TOKEN if the repo defines it
+```
+
+`python-ci.yml` inputs:
+
+| Input                     | Default      | Meaning                                                            |
+| ------------------------- | ------------ | ------------------------------------------------------------------ |
+| `working-directory`       | `.`          | Directory that contains `pyproject.toml`                           |
+| `coverage-min`            | `80`         | Minimum total coverage, in percent                                 |
+| `domain-coverage-min`     | `95`         | Minimum coverage of domain code, in percent; `0` disables the gate |
+| `domain-coverage-pattern` | `*/domain/*` | coverage.py `--include` pattern that selects domain code           |
+
+Callers pin a release tag (`@v1`), never `@main`. Third-party actions inside the workflows are
+pinned to full commit SHAs, with the version in a comment.
 
 ## License
 
