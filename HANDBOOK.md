@@ -124,8 +124,9 @@ just seed       # load demo data (where applicable)
 - **Explicit errors.** Domain errors are typed exceptions, mapped to Problem Details at the API
   edge. No bare `except`, no swallowed errors.
 - **Money is never a float.** Use `Decimal` with an explicit currency in a `Money` value object,
-  with explicit rounding (`ROUND_HALF_EVEN`) at defined points. The database column is
-  `NUMERIC(18,4)`.
+  with explicit rounding at defined points: half up, ties away from zero (`ROUND_HALF_UP`), the rule
+  of commercial and tax rounding and of PostgreSQL's `round(numeric)`. Document amounts round to the
+  currency's minor units (ISO 4217). The database column is `NUMERIC(18,4)`.
 - **Time is always UTC and timezone-aware.** Convert only at the UI edge.
 - **IDs are UUIDv7**, which are sortable and safe to expose: `uuid.uuid7()` in Python and `uuidv7()`
   for database defaults.
