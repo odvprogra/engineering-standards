@@ -182,8 +182,11 @@ Applies to every HTTP service.
 - **Filtering and sorting** use explicit, whitelisted query parameters.
 - **Idempotency:** every non-idempotent `POST` that creates business records accepts
   `Idempotency-Key`.
-- **Optimistic concurrency** on mutable aggregates: a `version` field plus `If-Match`, and `409` on
-  conflict.
+- **Optimistic concurrency** on mutable aggregates: the `version` is sent as an `ETag`, and updates
+  require `If-Match`: `412 Precondition Failed` when it is stale, `428 Precondition Required` when
+  it is missing ([RFC 9110 §13.1.1](https://www.rfc-editor.org/rfc/rfc9110.html#name-if-match),
+  [RFC 6585 §3](https://www.rfc-editor.org/rfc/rfc6585.html#section-3)). `409 Conflict` is for
+  conflicts with the resource's state, such as an invalid transition.
 - **Timestamps** are ISO-8601 in UTC. **Money** is `{ "amount": "123.4500", "currency": "USD" }`,
   with the amount as a string.
 - **The OpenAPI spec** is generated, committed as `openapi.json`, and checked in CI for unintended
@@ -307,8 +310,8 @@ designed and measured, not assumed.
   `request_id` for support.
 - **Forms:** React Hook Form + Zod, validated on blur. Problem Details `errors[]` map to fields.
   Destructive actions require a confirmation that names the object.
-- **Concurrency:** on `409 Conflict`, show what changed and offer to reload. Never overwrite
-  silently.
+- **Concurrency:** on `412 Precondition Failed` (someone else changed the record), show what changed
+  and offer to reload. Never overwrite silently.
 - **Money:** always shown with its currency, formatted with `Intl.NumberFormat` in tabular numerals.
   **Never computed in the UI**: amounts come from the API.
 - **Dates:** stored in UTC and displayed in the user's timezone with `Intl.DateTimeFormat`. A
