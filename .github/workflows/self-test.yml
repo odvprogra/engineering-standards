@@ -23,6 +23,14 @@ jobs:
     # Exercises the Codecov upload path end to end (the fixture's coverage is not a project metric).
     secrets: inherit
 
+  python-ci-system-packages:
+    uses: ./.github/workflows/python-ci.yml
+    with:
+      working-directory: tests/fixtures/sample-system-packages
+      # The fixture's test fails unless the package below is installed (the runner lacks it).
+      system-packages: libharfbuzz-subset0
+      domain-coverage-min: 0
+
   security:
     uses: ./.github/workflows/security.yml
     with:

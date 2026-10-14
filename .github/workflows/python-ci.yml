@@ -23,6 +23,12 @@ on:
         description: coverage.py --include pattern that selects domain code.
         type: string
         default: "*/domain/*"
+      system-packages:
+        description: >-
+          Space-separated Debian packages the tests need from the system, installed with apt
+          before anything else (for example the libraries a PDF renderer loads). Empty: none.
+        type: string
+        default: ""
     secrets:
       CODECOV_TOKEN:
         description: Optional. When set, the coverage report is uploaded to Codecov.
@@ -46,6 +52,16 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Install system packages
+        if: inputs.system-packages != ''
+        env:
+          SYSTEM_PACKAGES: ${{ inputs.system-packages }}
+        # Unquoted on purpose: each space-separated name is one package.
+        run: |
+          sudo apt-get update
+          # shellcheck disable=SC2086
+          sudo apt-get install --yes --no-install-recommends $SYSTEM_PACKAGES
 
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
