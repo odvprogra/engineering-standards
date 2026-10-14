@@ -81,6 +81,7 @@ jobs:
 | `coverage-min`            | `80`         | Minimum total coverage, in percent                                 |
 | `domain-coverage-min`     | `95`         | Minimum coverage of domain code, in percent; `0` disables the gate |
 | `domain-coverage-pattern` | `*/domain/*` | coverage.py `--include` pattern that selects domain code           |
+| `system-packages`         | none         | Debian packages the tests need, installed with apt first           |
 
 Callers pin a release tag (`@v1`), never `@main`. Third-party actions inside the workflows are
 pinned to full commit SHAs, with the version in a comment.
