@@ -286,9 +286,11 @@ designed and measured, not assumed.
 ### 14.1 Design system
 
 - **One set of design tokens per product family:** color, typography, spacing, radius, shadow and
-  motion. They are defined once as CSS custom properties plus a Tailwind preset; other UIs in the
-  family pin a copy. **Code is the source of truth**: mockups are derived from it, never the other
-  way around.
+  motion. They are written once in the Design Tokens Community Group format (2025.10) and built into
+  CSS custom properties, a Tailwind CSS v4 theme (a CSS file with `@theme`; v3's JavaScript presets
+  only load through v4's legacy `@config`) and JSON. When the family spans several repositories, the
+  tokens live in a repository of their own and every UI pins one of its releases. **Code is the
+  source of truth**: mockups are derived from it, never the other way around.
 - **Semantic tokens** (`--color-danger`, `--color-surface-muted`), never raw palette values in
   components, so themes and accents change in one place.
 - **Components:** shadcn/ui customized with the tokens. Do not add a second component library.
@@ -363,7 +365,7 @@ designed and measured, not assumed.
 
 ### 14.6 Brand
 
-Each product keeps a brand guide in `docs/brand/` covering:
+Each product keeps a brand guide in `docs/brand/` of the repository that holds its tokens, covering:
 
 - name and positioning
 - logo: SVG logomark + wordmark, clear space, minimum size, misuse
