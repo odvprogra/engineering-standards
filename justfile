@@ -1,4 +1,4 @@
-# Uniform commands (HANDBOOK §3). Requires: Docker, Node.js (npx) and uv.
+# Uniform commands (HANDBOOK §3). Requires: Docker, Node.js 24 (npx, Corepack) and uv.
 
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
 
@@ -10,10 +10,10 @@ actionlint := "rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d35
 default:
     @just --list
 
-# Install the sample project used by the self-tests
-[working-directory: 'tests/fixtures/sample-service']
+# Install the sample projects used by the self-tests
 setup:
-    uv sync --locked
+    uv sync --locked --directory tests/fixtures/sample-service
+    corepack pnpm --dir tests/fixtures/sample-node install --frozen-lockfile
 
 # Lint workflows, formatting and Markdown
 lint:
@@ -33,5 +33,9 @@ test:
     uv run mypy
     uv run pytest --cov --cov-fail-under=80
 
+# Run the web-ci check job's recipe against the sample Node project
+test-web:
+    just tests/fixtures/sample-node/check
+
 # Everything CI checks
-check: lint test
+check: lint test test-web

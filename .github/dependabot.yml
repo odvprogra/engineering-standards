@@ -20,3 +20,17 @@ updates:
         patterns: ["*"]
     commit-message:
       prefix: chore
+
+  - package-ecosystem: npm
+    directory: /tests/fixtures/sample-node
+    schedule:
+      interval: weekly
+    groups:
+      sample-node:
+        patterns: ["*"]
+    # The fixture runs on Node.js 24, the version web-ci.yml installs by default.
+    ignore:
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+    commit-message:
+      prefix: chore

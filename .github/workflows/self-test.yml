@@ -36,6 +36,24 @@ jobs:
     with:
       working-directory: tests/fixtures/sample-service
 
+  web-ci:
+    uses: ./.github/workflows/web-ci.yml
+    with:
+      working-directory: tests/fixtures/sample-node
+      journeys: true
+      # The fixture's journey opens the sample web service in Chromium, as an app's journeys reach
+      # its API.
+      compose-file: tests/fixtures/sample-web/compose.yaml
+    # Exercises the Codecov upload of the lcov report, as python-ci's self-test does for coverage.xml.
+    secrets: inherit
+
+  security-node:
+    uses: ./.github/workflows/security.yml
+    with:
+      working-directory: tests/fixtures/sample-node
+      audit-python: false
+      audit-node: true
+
   docker-build:
     uses: ./.github/workflows/docker-build.yml
     with:

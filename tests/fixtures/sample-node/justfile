@@ -1,0 +1,16 @@
+# The uniform recipes web-ci.yml runs (HANDBOOK §3), reduced to what the fixture has.
+
+set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
+
+pnpm := "corepack pnpm"
+
+# Type-check the sources and the tests
+typecheck:
+    {{ pnpm }} exec tsc -p .
+
+# Unit tests with the coverage gate
+test:
+    {{ pnpm }} exec vitest run --coverage
+
+# Everything CI checks
+check: typecheck test
