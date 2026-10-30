@@ -14,6 +14,8 @@ default:
 setup:
     uv sync --locked --directory tests/fixtures/sample-service
     corepack pnpm --dir tests/fixtures/sample-node install --frozen-lockfile
+    corepack pnpm --dir tests/fixtures/sample-node-browser install --frozen-lockfile
+    corepack pnpm --dir tests/fixtures/sample-node-browser exec playwright install chromium
 
 # Lint workflows, formatting and Markdown
 lint:
@@ -33,9 +35,10 @@ test:
     uv run mypy
     uv run pytest --cov --cov-fail-under=80
 
-# Run the web-ci check job's recipe against the sample Node project
+# Run the web-ci check job's recipe against the sample Node projects
 test-web:
     just tests/fixtures/sample-node/check
+    just tests/fixtures/sample-node-browser/check
 
 # Everything CI checks
 check: lint test test-web

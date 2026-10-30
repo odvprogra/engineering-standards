@@ -6,7 +6,8 @@ name: Web CI
 # pnpm comes from the caller's package.json (`packageManager`), so CI runs the version Corepack runs
 # locally. Journeys that need services (an API and its database) pass `compose-file`: the stack is
 # started with `docker compose up --wait` before Playwright, so each long-running service needs a
-# healthcheck. The Node dependency audit lives in security.yml (`audit-node`).
+# healthcheck. The Node dependency audit lives in security.yml (`audit-node`). Unit tests that run in
+# a browser (Vitest browser mode, Storybook's Vitest addon) pass `check-browsers`.
 
 on:
   workflow_call:
@@ -23,6 +24,12 @@ on:
         description: Coverage report uploaded to Codecov, relative to working-directory.
         type: string
         default: coverage/lcov.info
+      check-browsers:
+        description: >-
+          Space-separated browsers Playwright installs, with their system dependencies, before
+          `just check`, for unit tests that run in a browser. Empty installs none.
+        type: string
+        default: ""
       journeys:
         description: Run the Playwright journeys (`pnpm exec playwright test`) in their own job.
         type: boolean
@@ -74,6 +81,15 @@ jobs:
 
       - name: Install dependencies (lockfile must be up to date)
         run: pnpm install --frozen-lockfile
+
+      # Unquoted on purpose: each space-separated name is one browser.
+      - name: Install Playwright browsers for the unit tests
+        if: inputs.check-browsers != ''
+        env:
+          PLAYWRIGHT_BROWSERS: ${{ inputs.check-browsers }}
+        run: |
+          # shellcheck disable=SC2086
+          pnpm exec playwright install --with-deps $PLAYWRIGHT_BROWSERS
 
       - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
 

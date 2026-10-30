@@ -47,6 +47,13 @@ jobs:
     # Exercises the Codecov upload of the lcov report, as python-ci's self-test does for coverage.xml.
     secrets: inherit
 
+  web-ci-check-browsers:
+    uses: ./.github/workflows/web-ci.yml
+    with:
+      working-directory: tests/fixtures/sample-node-browser
+      # The fixture's tests run in Chromium (Vitest browser mode) and fail unless it is installed.
+      check-browsers: chromium
+
   security-node:
     uses: ./.github/workflows/security.yml
     with:

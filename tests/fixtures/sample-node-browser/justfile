@@ -1,0 +1,12 @@
+# The uniform recipe web-ci.yml runs (HANDBOOK §3), reduced to what the fixture has.
+
+set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
+
+pnpm := "corepack pnpm"
+
+# Tests in Chromium (Vitest browser mode): they fail unless Playwright's Chromium is installed
+test:
+    {{ pnpm }} exec vitest run
+
+# Everything CI checks
+check: test
