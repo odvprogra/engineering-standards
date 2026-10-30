@@ -55,7 +55,8 @@ documented, delivered and presented, so that any repo can be read, run and chang
 
 | Concern            | Choice                                                                                         |
 | ------------------ | ---------------------------------------------------------------------------------------------- |
-| Package manager    | `pnpm`                                                                                         |
+| Runtime            | Node.js 24 (LTS)                                                                               |
+| Package manager    | `pnpm`, its version pinned in `package.json`'s `packageManager` (Corepack locally)             |
 | Framework          | Next.js (App Router), React, TypeScript with `strict: true`                                    |
 | Styling            | Tailwind CSS + shadcn/ui (Radix primitives), themed with the product's design tokens (§14)     |
 | Icons              | Lucide only                                                                                    |
@@ -213,8 +214,8 @@ This repo's `.github/workflows/` exposes reusable workflows (`on: workflow_call`
 | Workflow           | Steps                                                                |
 | ------------------ | -------------------------------------------------------------------- |
 | `python-ci.yml`    | uv sync → ruff → mypy → pytest with coverage gates → upload coverage |
-| `web-ci.yml`       | pnpm install → eslint → tsc → vitest → Playwright (optional)         |
-| `security.yml`     | pip-audit / pnpm audit + gitleaks                                    |
+| `web-ci.yml`       | pnpm install → `just check` → coverage → Playwright (optional)       |
+| `security.yml`     | pip-audit and/or pnpm audit + gitleaks                               |
 | `docker-build.yml` | build the image, run it, smoke-test `/health/ready`                  |
 | `release.yml`      | release-please                                                       |
 

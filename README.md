@@ -37,7 +37,8 @@ these standards as code.
 | Workflow                                                 | What it does                                                                                                                                                                         |
 | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [`python-ci.yml`](.github/workflows/python-ci.yml)       | `uv sync --locked` → ruff format and lint → mypy → pytest with a total coverage gate (80%) and a domain coverage gate (95%) → coverage summary, artifact and optional Codecov upload |
-| [`security.yml`](.github/workflows/security.yml)         | pip-audit on the locked Python dependencies + gitleaks on the full git history (binary checksum-verified); honors a repo's `.gitleaks.toml`                                          |
+| [`web-ci.yml`](.github/workflows/web-ci.yml)             | pnpm from `packageManager` → `pnpm install --frozen-lockfile` → the project's `just check` → optional Codecov upload → optional Playwright journeys after `docker compose up --wait` |
+| [`security.yml`](.github/workflows/security.yml)         | pip-audit (Python) and/or `pnpm audit` (Node) on the locked dependencies + gitleaks on the full git history (binary checksum-verified); honors a repo's `.gitleaks.toml`             |
 | [`docker-build.yml`](.github/workflows/docker-build.yml) | Builds the image (with layer cache), fails if it runs as root, starts it (alone, or with its dependencies through `docker compose up --wait`) and polls `/health/ready`              |
 
 A project calls them from its own `.github/workflows/ci.yml`:
@@ -73,6 +74,24 @@ jobs:
       compose-file: docker-compose.yml # optional: readiness needs PostgreSQL
 ```
 
+A web project (pnpm, Next.js) calls the web and security workflows instead:
+
+```yaml
+jobs:
+  web:
+    uses: odvprogra/engineering-standards/.github/workflows/web-ci.yml@v1
+    with:
+      journeys: true # Playwright, after the services below are up
+      compose-file: e2e/compose.yaml # optional: the API and its database
+    secrets: inherit
+
+  security:
+    uses: odvprogra/engineering-standards/.github/workflows/security.yml@v1
+    with:
+      audit-python: false
+      audit-node: true
+```
+
 `python-ci.yml` inputs:
 
 | Input                     | Default      | Meaning                                                            |
@@ -83,16 +102,31 @@ jobs:
 | `domain-coverage-pattern` | `*/domain/*` | coverage.py `--include` pattern that selects domain code           |
 | `system-packages`         | none         | Debian packages the tests need, installed with apt first           |
 
+`web-ci.yml` inputs (the coverage gate lives in the project's Vitest configuration, and its
+justfile's `check` recipe decides what runs):
+
+| Input                 | Default              | Meaning                                                             |
+| --------------------- | -------------------- | ------------------------------------------------------------------- |
+| `working-directory`   | `.`                  | Directory that contains `package.json` and `pnpm-lock.yaml`         |
+| `node-version`        | `24`                 | Node.js version                                                     |
+| `coverage-file`       | `coverage/lcov.info` | Report uploaded to Codecov, relative to `working-directory`         |
+| `journeys`            | `false`              | Run `pnpm exec playwright test` in its own job                      |
+| `playwright-browsers` | `chromium`           | Browsers Playwright installs, with their system dependencies        |
+| `compose-file`        | none                 | Compose file (from the repository root) started before the journeys |
+
+`security.yml` takes `working-directory`, `audit-python` (default `true`) and `audit-node` (default
+`false`); gitleaks always runs.
+
 Callers pin a release tag (`@v1`), never `@main`. Third-party actions inside the workflows are
 pinned to full commit SHAs, with the version in a comment.
 
 ## Working on this repo
 
-Requires Docker, Node.js (for `npx`) and [uv](https://docs.astral.sh/uv/).
+Requires Docker, Node.js 24 (for `npx` and Corepack) and [uv](https://docs.astral.sh/uv/).
 
 ```sh
-just setup   # install the sample project used by the self-tests
-just check   # lint (actionlint, Prettier, markdownlint) + the python-ci steps on the sample
+just setup   # install the sample projects used by the self-tests
+just check   # lint (actionlint, Prettier, markdownlint) + python-ci's steps and web-ci's recipe
 just fmt     # format everything with Prettier
 ```
 

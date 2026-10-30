@@ -1,0 +1,159 @@
+name: Web CI
+
+# Reusable workflow (HANDBOOK §2, §7, §10): install a pnpm project, run its `just check` (lint,
+# type-check, unit tests with their coverage gate) and, optionally, its Playwright journeys.
+#
+# pnpm comes from the caller's package.json (`packageManager`), so CI runs the version Corepack runs
+# locally. Journeys that need services (an API and its database) pass `compose-file`: the stack is
+# started with `docker compose up --wait` before Playwright, so each long-running service needs a
+# healthcheck. The Node dependency audit lives in security.yml (`audit-node`).
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: Directory that contains package.json and pnpm-lock.yaml.
+        type: string
+        default: "."
+      node-version:
+        description: Node.js version.
+        type: string
+        default: "24"
+      coverage-file:
+        description: Coverage report uploaded to Codecov, relative to working-directory.
+        type: string
+        default: coverage/lcov.info
+      journeys:
+        description: Run the Playwright journeys (`pnpm exec playwright test`) in their own job.
+        type: boolean
+        default: false
+      playwright-browsers:
+        description: Space-separated browsers Playwright installs for the journeys.
+        type: string
+        default: chromium
+      compose-file:
+        description: >-
+          Optional compose file, relative to the repository root, started before the journeys with
+          the services the app talks to.
+        type: string
+        default: ""
+    secrets:
+      CODECOV_TOKEN:
+        description: Optional. When set, the coverage report is uploaded to Codecov.
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint, type-check, test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    env:
+      # Exposed as env because the secrets context is not available in step conditions.
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Before setup-node, whose pnpm cache needs pnpm on the PATH.
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: ${{ inputs.working-directory }}/package.json
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: pnpm
+          cache-dependency-path: ${{ inputs.working-directory }}/pnpm-lock.yaml
+
+      - name: Install dependencies (lockfile must be up to date)
+        run: pnpm install --frozen-lockfile
+
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+
+      # The project's justfile names its tools and their versions; CI runs the same recipe.
+      - name: just check
+        run: uvx --from rust-just@1.58.0 just check
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: coverage-lcov
+          path: ${{ inputs.working-directory }}/${{ inputs.coverage-file }}
+          if-no-files-found: ignore
+
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        if: env.CODECOV_TOKEN != ''
+        with:
+          token: ${{ env.CODECOV_TOKEN }}
+          files: ${{ inputs.working-directory }}/${{ inputs.coverage-file }}
+          fail_ci_if_error: true
+
+  journeys:
+    name: Journeys
+    if: inputs.journeys
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    env:
+      COMPOSE_FILE: ${{ inputs.compose-file }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: ${{ inputs.working-directory }}/package.json
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: pnpm
+          cache-dependency-path: ${{ inputs.working-directory }}/pnpm-lock.yaml
+
+      - name: Install dependencies (lockfile must be up to date)
+        run: pnpm install --frozen-lockfile
+
+      # Unquoted on purpose: each space-separated name is one browser.
+      - name: Install Playwright browsers and their system dependencies
+        env:
+          PLAYWRIGHT_BROWSERS: ${{ inputs.playwright-browsers }}
+        run: |
+          # shellcheck disable=SC2086
+          pnpm exec playwright install --with-deps $PLAYWRIGHT_BROWSERS
+
+      - name: Start services
+        if: inputs.compose-file != ''
+        working-directory: ${{ github.workspace }}
+        run: docker compose up --detach --wait --wait-timeout 180
+
+      - name: Run the journeys
+        run: pnpm exec playwright test
+
+      # Uploaded whether the journeys pass or fail, as Playwright's CI guide does.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: ${{ inputs.working-directory }}/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Service logs on failure
+        if: failure() && inputs.compose-file != ''
+        working-directory: ${{ github.workspace }}
+        run: docker compose logs
+
+      - name: Tear down
+        if: always() && inputs.compose-file != ''
+        working-directory: ${{ github.workspace }}
+        run: docker compose down --volumes
