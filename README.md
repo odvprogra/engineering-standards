@@ -110,9 +110,14 @@ justfile's `check` recipe decides what runs):
 | `working-directory`   | `.`                  | Directory that contains `package.json` and `pnpm-lock.yaml`         |
 | `node-version`        | `24`                 | Node.js version                                                     |
 | `coverage-file`       | `coverage/lcov.info` | Report uploaded to Codecov, relative to `working-directory`         |
+| `check-browsers`      | none                 | Browsers installed before `just check`, for tests run in a browser  |
 | `journeys`            | `false`              | Run `pnpm exec playwright test` in its own job                      |
 | `playwright-browsers` | `chromium`           | Browsers Playwright installs, with their system dependencies        |
 | `compose-file`        | none                 | Compose file (from the repository root) started before the journeys |
+
+Unit tests that need a browser (Vitest browser mode, which Storybook's Vitest addon uses to run
+stories) set `check-browsers: chromium`; the project must depend on `playwright` or
+`@playwright/test`, whose CLI installs them.
 
 `security.yml` takes `working-directory`, `audit-python` (default `true`) and `audit-node` (default
 `false`); gitleaks always runs.

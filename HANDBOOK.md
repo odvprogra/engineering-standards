@@ -211,13 +211,13 @@ Applies to every HTTP service.
 
 This repo's `.github/workflows/` exposes reusable workflows (`on: workflow_call`):
 
-| Workflow           | Steps                                                                |
-| ------------------ | -------------------------------------------------------------------- |
-| `python-ci.yml`    | uv sync → ruff → mypy → pytest with coverage gates → upload coverage |
-| `web-ci.yml`       | pnpm install → `just check` → coverage → Playwright (optional)       |
-| `security.yml`     | pip-audit and/or pnpm audit + gitleaks                               |
-| `docker-build.yml` | build the image, run it, smoke-test `/health/ready`                  |
-| `release.yml`      | release-please                                                       |
+| Workflow           | Steps                                                                                |
+| ------------------ | ------------------------------------------------------------------------------------ |
+| `python-ci.yml`    | uv sync → ruff → mypy → pytest with coverage gates → upload coverage                 |
+| `web-ci.yml`       | pnpm install → browsers (optional) → `just check` → coverage → Playwright (optional) |
+| `security.yml`     | pip-audit and/or pnpm audit + gitleaks                                               |
+| `docker-build.yml` | build the image, run it, smoke-test `/health/ready`                                  |
+| `release.yml`      | release-please                                                                       |
 
 Each project's `ci.yml` is about 20 lines that call these, so a change in the standards reaches
 every project. Workflows are added when the first project needs them; the [README](README.md) lists
